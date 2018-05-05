@@ -1,5 +1,8 @@
 var KEYS = ['c', 'd', 'e', 'f'];
 var NOTE_DURATION = 1000;
+var play_notes = [];
+var userPlayTimeout = null;
+var disableEntry = false;
 
 // NoteBox
 //
@@ -51,10 +54,26 @@ function NoteBox(key, onClick) {
 
 	// Call this NoteBox's clickHandler and play the note.
 	this.clickHandler = function () {
-		if (!enabled) return;
+		if (!enabled || disableEntry) return;
 
 		this.onClick(this.key)
 		this.play()
+		play_notes.push(key);
+
+		clearTimeout(userPlayTimeout);
+
+		userPlayTimeout = setTimeout(function() {
+			disableEntry = true;
+			play_notes.forEach(function(key, i) {
+				setTimeout(notes[key].play.bind(null, key), i * NOTE_DURATION);
+			})
+			
+			setTimeout(function(){
+				disableEntry = false;
+			}, play_notes.length*NOTE_DURATION)
+			// disableEntry = false;
+			play_notes = [];
+		}, 2500)
 	}.bind(this)
 
 	boxEl.addEventListener('mousedown', this.clickHandler);
@@ -71,6 +90,8 @@ KEYS.forEach(function (key) {
 	notes[key] = new NoteBox(key);
 });
 
-KEYS.concat(KEYS.slice().reverse()).forEach(function(key, i) {
-	setTimeout(notes[key].play.bind(null, key), i * NOTE_DURATION);
-});
+
+// This code is for playing the initial music
+// KEYS.concat(KEYS.slice().reverse()).forEach(function(key, i) {
+// 	setTimeout(notes[key].play.bind(null, key), i * NOTE_DURATION);
+// });
